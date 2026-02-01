@@ -152,6 +152,32 @@ function printUrls(domain, entries) {
   console.log();
 }
 
+function printGitHubUserList(groups, threshold, markedForDeletion) {
+  const sorted = [...groups.entries()]
+    .filter(([_, entries]) => entries.length >= threshold)
+    .sort((a, b) => b[1].length - a[1].length);
+
+  if (sorted.length === 0) {
+    console.log(`${DIM}No GitHub users with ${threshold}+ URLs${RESET}\n`);
+    return;
+  }
+
+  const maxCount = sorted[0][1].length;
+
+  console.log(`\n${BOLD}GitHub users with ${threshold}+ URLs:${RESET}\n`);
+
+  sorted.forEach(([user, entries], index) => {
+    const num = String(index + 1).padStart(3);
+    const count = String(entries.length).padStart(4);
+    const bar = "█".repeat(Math.ceil((entries.length / maxCount) * 15));
+    const deleteMarker = markedForDeletion.has(user) ? `${RED} [DELETE]${RESET}` : "";
+
+    console.log(`  ${DIM}${num}.${RESET} ${CYAN}${user.padEnd(30)}${RESET} ${YELLOW}${count}${RESET} ${GREEN}${bar}${RESET}${deleteMarker}`);
+  });
+
+  console.log();
+}
+
 function printHelp() {
   console.log(`
 ${BOLD}OneTab Analyzer${RESET}
