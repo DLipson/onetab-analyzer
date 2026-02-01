@@ -8,7 +8,7 @@ const readline = require("readline");
 
 const MULTI_PART_TLDS = [
   "co.uk", "co.nz", "co.jp", "co.il",
-  "com.au", "com.br", "org.uk",
+  "com.au", "com.br", "org.uk", "org.il",
   "github.io", "gitlab.io", "vercel.app", "netlify.app"
 ];
 
@@ -300,6 +300,9 @@ function runTests() {
 
   test("handles github.io",
     extractDomain("https://user.github.io/repo") === "user.github.io");
+
+  test("handles org.il TLD",
+    extractDomain("https://example.org.il/page") === "example.org.il");
 
   test("returns null for invalid URL",
     extractDomain("not-a-url") === null);
