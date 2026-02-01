@@ -52,14 +52,14 @@ Displays domains sorted by URL count, showing:
 
 ### Interactive Commands
 
-| Command | Shortcut | Description |
-|---|---|---|
-| `show <N\|domain>` | `s` | Display all URLs and titles for a domain (by list number or partial name match) |
-| `delete <N\|domain>` | `d` | Mark a domain for deletion |
-| `undo <N\|domain>` | `u` | Remove the deletion mark from a domain |
-| `save <filename>` | -- | Write a filtered export without deleted domains (refuses to overwrite the input file) |
-| `threshold <N>` | `t` | Change the minimum URL count for domains to appear in the list |
-| `quit` | `q` / `exit` | Exit the program |
+| Command | Description |
+|---|---|
+| `s <N\|domain>` | Show all URLs and titles for a domain (by list number or partial name match) |
+| `d <N\|domain>` | Mark a domain for deletion |
+| `u <N\|domain>` | Remove the deletion mark from a domain |
+| `v <filename>` | Save a filtered export without deleted domains (refuses to overwrite the input file) |
+| `t <N>` | Change the minimum URL count for domains to appear in the list |
+| `q` | Quit |
 
 Domain resolution is flexible -- you can type a number from the list, the exact domain, or a substring match (e.g., `show git` matches `github.com`).
 
@@ -68,8 +68,8 @@ Domain resolution is flexible -- you can type a number from the list, the exact 
 1. Export your tabs from OneTab (produces a `.txt` file)
 2. Run `node onetab-analyzer.js export.txt`
 3. Review the domain list sorted by frequency
-4. `show 1` to inspect the top domain's URLs
-5. `delete 1` to mark it for removal
+4. `s 1` to inspect the top domain's URLs
+5. `d 1` to mark it for removal
 6. Repeat for other unwanted domains
-7. `save cleaned.txt` to write the filtered export
+7. `v cleaned.txt` to write the filtered export
 8. Import `cleaned.txt` back into OneTab or use it however you like

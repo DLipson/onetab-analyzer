@@ -138,12 +138,12 @@ ${BOLD}Options:${RESET}
   --help          Show this help
 
 ${BOLD}Interactive Commands:${RESET}
-  show <N|domain>     View all URLs for a domain (by number or name)
-  delete <N|domain>   Mark domain for deletion
-  undo <domain>       Unmark domain
-  save <filename>     Save filtered export (without deleted domains)
-  threshold <N>       Change threshold
-  quit                Exit
+  s <N|domain>     Show all URLs for a domain (by number or name)
+  d <N|domain>     Delete (mark domain for deletion)
+  u <domain>       Undo deletion mark
+  v <filename>     Save filtered export (without deleted domains)
+  t <N>            Change threshold
+  q                Quit
 
 ${BOLD}Examples:${RESET}
   node onetab-analyzer.js tabs.txt
@@ -185,7 +185,7 @@ async function runInteractive(entries, groups, initialThreshold, inputFile) {
 
     printDomainList(groups, threshold, markedForDeletion);
 
-    console.log(`${DIM}Commands: show, delete, undo, save, threshold, quit${RESET}\n`);
+    console.log(`${DIM}Commands: s(how), d(elete), u(ndo), v(sa-v-e), t(hreshold), q(uit)${RESET}\n`);
 
     const input = await prompt(rl, `${BOLD}> ${RESET}`);
     const [command, ...args] = input.split(/\s+/);
@@ -194,7 +194,6 @@ async function runInteractive(entries, groups, initialThreshold, inputFile) {
     const sortedDomains = getSortedDomains();
 
     switch (command?.toLowerCase()) {
-      case "show":
       case "s": {
         const domain = resolveDomain(arg, sortedDomains);
         if (domain && groups.has(domain)) {
@@ -206,7 +205,6 @@ async function runInteractive(entries, groups, initialThreshold, inputFile) {
         break;
       }
 
-      case "delete":
       case "d": {
         const domain = resolveDomain(arg, sortedDomains);
         if (domain) {
@@ -219,7 +217,6 @@ async function runInteractive(entries, groups, initialThreshold, inputFile) {
         break;
       }
 
-      case "undo":
       case "u": {
         const domain = resolveDomain(arg, sortedDomains) || arg.toLowerCase();
         if (markedForDeletion.has(domain)) {
@@ -232,7 +229,7 @@ async function runInteractive(entries, groups, initialThreshold, inputFile) {
         break;
       }
 
-      case "save": {
+      case "v": {
         if (!arg) {
           console.log(`${RED}Please provide filename${RESET}`);
         } else if (markedForDeletion.size === 0) {
@@ -249,7 +246,6 @@ async function runInteractive(entries, groups, initialThreshold, inputFile) {
         break;
       }
 
-      case "threshold":
       case "t": {
         const newThreshold = parseInt(arg, 10);
         if (newThreshold > 0) {
@@ -258,9 +254,7 @@ async function runInteractive(entries, groups, initialThreshold, inputFile) {
         break;
       }
 
-      case "quit":
       case "q":
-      case "exit":
         rl.close();
         return;
     }
