@@ -198,6 +198,7 @@ ${BOLD}Interactive Commands:${RESET}
   u <domain>       Undo deletion mark
   v <filename|def> Save filtered export (without deleted domains; "def" = cleaned.txt)
   t <N>            Change threshold
+  g                GitHub user view (group github.com URLs by user/org)
   q                Quit
 
   s and d accept multiple items separated by hyphens (e.g. d 1-5-12)
@@ -227,9 +228,90 @@ function prompt(rl, question) {
   return new Promise(resolve => rl.question(question, answer => resolve(answer.trim())));
 }
 
+async function runGitHubView(entries, rl, markedEntries) {
+  const ghGroups = groupByGitHubUser(entries);
+  const ghMarked = new Set();
+  const threshold = 1;
+
+  const getSortedUsers = () => [...ghGroups.entries()]
+    .filter(([_, e]) => e.length >= threshold)
+    .sort((a, b) => b[1].length - a[1].length);
+
+  while (true) {
+    console.clear();
+    const ghCount = [...ghGroups.values()].reduce((sum, e) => sum + e.length, 0);
+    console.log(`${BOLD}GitHub User View${RESET} - ${ghCount} URLs, ${ghGroups.size} users\n`);
+
+    printGitHubUserList(ghGroups, threshold, ghMarked);
+
+    console.log(`${DIM}Commands: s(how), d(elete), u(ndo), q(uit to main)${RESET}\n`);
+
+    const input = await prompt(rl, `${BOLD}gh> ${RESET}`);
+    const [command, ...args] = input.split(/\s+/);
+    const arg = args.join(" ");
+
+    const sortedUsers = getSortedUsers();
+
+    switch (command?.toLowerCase()) {
+      case "s": {
+        const targets = arg.split("-").map(s => s.trim()).filter(Boolean);
+        for (const target of targets) {
+          const user = resolveDomain(target, sortedUsers);
+          if (user && ghGroups.has(user)) {
+            printUrls(user, ghGroups.get(user));
+          } else {
+            console.log(`${RED}User not found: ${target}${RESET}`);
+          }
+        }
+        await prompt(rl, "Press Enter to continue...");
+        break;
+      }
+
+      case "d": {
+        const targets = arg.split("-").map(s => s.trim()).filter(Boolean);
+        for (const target of targets) {
+          const user = resolveDomain(target, sortedUsers);
+          if (user) {
+            ghMarked.add(user);
+            console.log(`${GREEN}Marked ${user} for deletion${RESET}`);
+          } else {
+            console.log(`${RED}User not found: ${target}${RESET}`);
+          }
+        }
+        await prompt(rl, "Press Enter to continue...");
+        break;
+      }
+
+      case "u": {
+        const user = resolveDomain(arg, sortedUsers) || arg.toLowerCase();
+        if (ghMarked.has(user)) {
+          ghMarked.delete(user);
+          console.log(`${GREEN}Unmarked ${user}${RESET}`);
+        } else {
+          console.log(`${RED}User not in deletion list${RESET}`);
+        }
+        await prompt(rl, "Press Enter to continue...");
+        break;
+      }
+
+      case "q": {
+        // Transfer marked GitHub user entries to the main markedEntries set
+        for (const user of ghMarked) {
+          const userEntries = ghGroups.get(user) || [];
+          for (const entry of userEntries) {
+            markedEntries.add(entry);
+          }
+        }
+        return;
+      }
+    }
+  }
+}
+
 async function runInteractive(entries, groups, initialThreshold, inputFile) {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   const markedForDeletion = new Set();
+  const markedEntries = new Set();
   let threshold = initialThreshold;
   let saved = false;
 
@@ -243,7 +325,7 @@ async function runInteractive(entries, groups, initialThreshold, inputFile) {
 
     printDomainList(groups, threshold, markedForDeletion);
 
-    console.log(`${DIM}Commands: s(how), d(elete), u(ndo), v(sa-v-e), t(hreshold), q(uit)${RESET}\n`);
+    console.log(`${DIM}Commands: s(how), d(elete), u(ndo), v(sa-v-e), t(hreshold), g(ithub), q(uit)${RESET}\n`);
 
     const input = await prompt(rl, `${BOLD}> ${RESET}`);
     const [command, ...args] = input.split(/\s+/);
@@ -297,18 +379,23 @@ async function runInteractive(entries, groups, initialThreshold, inputFile) {
         const filename = arg === "def" ? "cleaned.txt" : arg;
         if (!filename) {
           console.log(`${RED}Please provide filename (or "def" for cleaned.txt)${RESET}`);
-        } else if (markedForDeletion.size === 0) {
+        } else if (markedForDeletion.size === 0 && markedEntries.size === 0) {
           console.log(`${YELLOW}No domains marked for deletion${RESET}`);
         } else if (filename === inputFile) {
           console.log(`${RED}Cannot overwrite input file${RESET}`);
         } else {
-          const filtered = entries.filter(e => !markedForDeletion.has(e.domain));
+          const filtered = entries.filter(e => !markedForDeletion.has(e.domain) && !markedEntries.has(e));
           fs.writeFileSync(filename, filtered.map(e => e.raw).join("\n"));
           console.log(`${GREEN}Saved ${filtered.length} URLs to ${filename}${RESET}`);
           console.log(`${YELLOW}Removed ${entries.length - filtered.length} URLs${RESET}`);
           saved = true;
         }
         await prompt(rl, "Press Enter to continue...");
+        break;
+      }
+
+      case "g": {
+        await runGitHubView(entries, rl, markedEntries);
         break;
       }
 
@@ -321,7 +408,7 @@ async function runInteractive(entries, groups, initialThreshold, inputFile) {
       }
 
       case "q": {
-        if (markedForDeletion.size > 0 && !saved) {
+        if ((markedForDeletion.size > 0 || markedEntries.size > 0) && !saved) {
           const answer = await prompt(rl, `${YELLOW}You have unsaved deletions. Quit anyway? (y/n) ${RESET}`);
           if (answer.toLowerCase() !== "y") break;
         }
