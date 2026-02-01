@@ -59,6 +59,7 @@ Displays domains sorted by URL count, showing:
 | `u <N\|domain>` | Remove the deletion mark from a domain |
 | `v <filename\|def>` | Save a filtered export without deleted domains. Pass `def` to use the default filename `cleaned.txt`. Refuses to overwrite the input file |
 | `t <N>` | Change the minimum URL count for domains to appear in the list |
+| `g` | Switch to GitHub user view -- groups `github.com` URLs by user/org. Supports `s`, `d`, `u`, and `q` (back to main) |
 | `q` | Quit (warns if there are unsaved deletions) |
 
 Domain resolution is flexible -- you can type a number from the list, the exact domain, or a substring match (e.g., `show git` matches `github.com`).
