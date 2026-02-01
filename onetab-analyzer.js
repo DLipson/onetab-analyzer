@@ -141,7 +141,7 @@ ${BOLD}Interactive Commands:${RESET}
   s <N|domain>     Show all URLs for a domain (by number or name)
   d <N|domain>     Delete (mark domain for deletion)
   u <domain>       Undo deletion mark
-  v <filename>     Save filtered export (without deleted domains)
+  v <filename|def> Save filtered export (without deleted domains; "def" = cleaned.txt)
   t <N>            Change threshold
   q                Quit
 
@@ -238,16 +238,17 @@ async function runInteractive(entries, groups, initialThreshold, inputFile) {
       }
 
       case "v": {
-        if (!arg) {
-          console.log(`${RED}Please provide filename${RESET}`);
+        const filename = arg === "def" ? "cleaned.txt" : arg;
+        if (!filename) {
+          console.log(`${RED}Please provide filename (or "def" for cleaned.txt)${RESET}`);
         } else if (markedForDeletion.size === 0) {
           console.log(`${YELLOW}No domains marked for deletion${RESET}`);
-        } else if (arg === inputFile) {
+        } else if (filename === inputFile) {
           console.log(`${RED}Cannot overwrite input file${RESET}`);
         } else {
           const filtered = entries.filter(e => !markedForDeletion.has(e.domain));
-          fs.writeFileSync(arg, filtered.map(e => e.raw).join("\n"));
-          console.log(`${GREEN}Saved ${filtered.length} URLs to ${arg}${RESET}`);
+          fs.writeFileSync(filename, filtered.map(e => e.raw).join("\n"));
+          console.log(`${GREEN}Saved ${filtered.length} URLs to ${filename}${RESET}`);
           console.log(`${YELLOW}Removed ${entries.length - filtered.length} URLs${RESET}`);
         }
         await prompt(rl, "Press Enter to continue...");

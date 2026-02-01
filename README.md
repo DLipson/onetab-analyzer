@@ -57,7 +57,7 @@ Displays domains sorted by URL count, showing:
 | `s <N\|domain>` | Show all URLs and titles for a domain (by list number or partial name match). Accepts multiple items separated by hyphens (e.g. `s 1-3-7`) |
 | `d <N\|domain>` | Mark a domain for deletion. Accepts multiple items separated by hyphens (e.g. `d 1-5-12`) |
 | `u <N\|domain>` | Remove the deletion mark from a domain |
-| `v <filename>` | Save a filtered export without deleted domains (refuses to overwrite the input file) |
+| `v <filename\|def>` | Save a filtered export without deleted domains. Pass `def` to use the default filename `cleaned.txt`. Refuses to overwrite the input file |
 | `t <N>` | Change the minimum URL count for domains to appear in the list |
 | `q` | Quit |
 
@@ -71,5 +71,5 @@ Domain resolution is flexible -- you can type a number from the list, the exact 
 4. `s 1` to inspect the top domain's URLs
 5. `d 1` to mark it for removal
 6. Repeat for other unwanted domains
-7. `v cleaned.txt` to write the filtered export
+7. `v def` to write the filtered export (saves as `cleaned.txt`)
 8. Import `cleaned.txt` back into OneTab or use it however you like
