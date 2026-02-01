@@ -145,6 +145,8 @@ ${BOLD}Interactive Commands:${RESET}
   t <N>            Change threshold
   q                Quit
 
+  s and d accept multiple items separated by hyphens (e.g. d 1-5-12)
+
 ${BOLD}Examples:${RESET}
   node onetab-analyzer.js tabs.txt
   node onetab-analyzer.js tabs.txt --threshold 5
@@ -195,23 +197,29 @@ async function runInteractive(entries, groups, initialThreshold, inputFile) {
 
     switch (command?.toLowerCase()) {
       case "s": {
-        const domain = resolveDomain(arg, sortedDomains);
-        if (domain && groups.has(domain)) {
-          printUrls(domain, groups.get(domain));
-        } else {
-          console.log(`${RED}Domain not found${RESET}`);
+        const targets = arg.split("-").map(s => s.trim()).filter(Boolean);
+        for (const target of targets) {
+          const domain = resolveDomain(target, sortedDomains);
+          if (domain && groups.has(domain)) {
+            printUrls(domain, groups.get(domain));
+          } else {
+            console.log(`${RED}Domain not found: ${target}${RESET}`);
+          }
         }
         await prompt(rl, "Press Enter to continue...");
         break;
       }
 
       case "d": {
-        const domain = resolveDomain(arg, sortedDomains);
-        if (domain) {
-          markedForDeletion.add(domain);
-          console.log(`${GREEN}Marked ${domain} for deletion${RESET}`);
-        } else {
-          console.log(`${RED}Domain not found${RESET}`);
+        const targets = arg.split("-").map(s => s.trim()).filter(Boolean);
+        for (const target of targets) {
+          const domain = resolveDomain(target, sortedDomains);
+          if (domain) {
+            markedForDeletion.add(domain);
+            console.log(`${GREEN}Marked ${domain} for deletion${RESET}`);
+          } else {
+            console.log(`${RED}Domain not found: ${target}${RESET}`);
+          }
         }
         await prompt(rl, "Press Enter to continue...");
         break;

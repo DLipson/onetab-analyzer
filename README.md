@@ -54,8 +54,8 @@ Displays domains sorted by URL count, showing:
 
 | Command | Description |
 |---|---|
-| `s <N\|domain>` | Show all URLs and titles for a domain (by list number or partial name match) |
-| `d <N\|domain>` | Mark a domain for deletion |
+| `s <N\|domain>` | Show all URLs and titles for a domain (by list number or partial name match). Accepts multiple items separated by hyphens (e.g. `s 1-3-7`) |
+| `d <N\|domain>` | Mark a domain for deletion. Accepts multiple items separated by hyphens (e.g. `d 1-5-12`) |
 | `u <N\|domain>` | Remove the deletion mark from a domain |
 | `v <filename>` | Save a filtered export without deleted domains (refuses to overwrite the input file) |
 | `t <N>` | Change the minimum URL count for domains to appear in the list |
