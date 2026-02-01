@@ -31,6 +31,35 @@ function extractDomain(urlString) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// GitHub User Extraction
+// ─────────────────────────────────────────────────────────────────────────────
+
+function extractGitHubUser(urlString) {
+  try {
+    const url = new URL(urlString.trim());
+    if (url.hostname.toLowerCase() !== "github.com") return null;
+    const segments = url.pathname.split("/").filter(Boolean);
+    return segments.length > 0 ? segments[0] : null;
+  } catch {
+    return null;
+  }
+}
+
+function groupByGitHubUser(entries) {
+  const groups = new Map();
+
+  for (const entry of entries) {
+    const user = extractGitHubUser(entry.url);
+    if (!user) continue;
+    const list = groups.get(user) || [];
+    list.push(entry);
+    groups.set(user, list);
+  }
+
+  return groups;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Parsing
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -353,6 +382,33 @@ function runTests() {
       const entries = parseFile("https://github.com/a\nhttps://github.com/b\nhttps://other.com");
       const groups = groupByDomain(entries);
       return groups.get("github.com")?.length === 2 && groups.get("other.com")?.length === 1;
+    })());
+
+  // GitHub user extraction tests
+  test("extractGitHubUser extracts user from repo URL",
+    extractGitHubUser("https://github.com/facebook/react") === "facebook");
+
+  test("extractGitHubUser extracts user from deep path",
+    extractGitHubUser("https://github.com/anthropics/claude-code/issues") === "anthropics");
+
+  test("extractGitHubUser returns null for non-GitHub URL",
+    extractGitHubUser("https://example.com/foo") === null);
+
+  test("extractGitHubUser returns null for GitHub root",
+    extractGitHubUser("https://github.com") === null);
+
+  test("extractGitHubUser returns null for GitHub root with trailing slash",
+    extractGitHubUser("https://github.com/") === null);
+
+  test("groupByGitHubUser groups correctly",
+    (() => {
+      const entries = parseFile(
+        "https://github.com/facebook/react\nhttps://github.com/facebook/jest\nhttps://github.com/anthropics/claude\nhttps://example.com/foo"
+      );
+      const groups = groupByGitHubUser(entries);
+      return groups.get("facebook")?.length === 2
+        && groups.get("anthropics")?.length === 1
+        && !groups.has("example.com");
     })());
 
   console.log(`\n${BOLD}Results: ${passed} passed, ${failed} failed${RESET}\n`);
