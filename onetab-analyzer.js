@@ -176,6 +176,7 @@ async function runInteractive(entries, groups, initialThreshold, inputFile) {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   const markedForDeletion = new Set();
   let threshold = initialThreshold;
+  let saved = false;
 
   const getSortedDomains = () => [...groups.entries()]
     .filter(([_, e]) => e.length >= threshold)
@@ -250,6 +251,7 @@ async function runInteractive(entries, groups, initialThreshold, inputFile) {
           fs.writeFileSync(filename, filtered.map(e => e.raw).join("\n"));
           console.log(`${GREEN}Saved ${filtered.length} URLs to ${filename}${RESET}`);
           console.log(`${YELLOW}Removed ${entries.length - filtered.length} URLs${RESET}`);
+          saved = true;
         }
         await prompt(rl, "Press Enter to continue...");
         break;
@@ -263,9 +265,14 @@ async function runInteractive(entries, groups, initialThreshold, inputFile) {
         break;
       }
 
-      case "q":
+      case "q": {
+        if (markedForDeletion.size > 0 && !saved) {
+          const answer = await prompt(rl, `${YELLOW}You have unsaved deletions. Quit anyway? (y/n) ${RESET}`);
+          if (answer.toLowerCase() !== "y") break;
+        }
         rl.close();
         return;
+      }
     }
   }
 }
